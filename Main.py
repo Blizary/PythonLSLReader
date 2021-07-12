@@ -20,6 +20,17 @@ root.grid_columnconfigure(1, weight=1, minsize=1300)
 
 loadedXDF = False
 
+
+def test_Selected():
+    selectedFile = listbox.curselection()
+    if selectedFile:
+        filename = listbox.get(ANCHOR)
+        if filename.endswith('.xdf'):
+                streams = pyxdf.load_xdf(filename)
+                show_data(streams)
+
+
+
 def print_event_info(event):
     print('\nAction:', event.action)
     print('Supported actions:', event.actions)
@@ -44,9 +55,10 @@ Label(root, text='Drag and drop files here:').grid(
                     row=0, column=0, padx=10, pady=5)
 Label(root, text='Data').grid(
                     row=0, column=1, padx=10, pady=5)
-#buttonbox = Frame(root)
-#buttonbox.grid(row=2, column=0, columnspan=2, pady=5)
-#Button(buttonbox, text='Quit', command=root.quit).pack(side=LEFT, padx=5)
+buttonbox = Frame(root)
+buttonbox.grid(row=2, column=0, columnspan=2, pady=0)
+Button(buttonbox, text='Open', command=test_Selected).pack(side=RIGHT, padx=0)
+buttonbox.grid_remove()
 
 ##############################################################################
 ######   Basic demo window: a Listbox to drag & drop files                  ##
@@ -54,6 +66,7 @@ Label(root, text='Data').grid(
 ##############################################################################
 listbox = Listbox(root, name='dnd_demo_listbox', selectmode='single', width=1, height=1)
 listbox.grid(row=1, column=0, padx=5, pady=5, sticky='news')
+
 text = Text(root, name='dnd_demo_text', wrap='word', undo=True, width=1, height=1)
 text.grid(row=1, column=1, pady=5, sticky='news')
 
@@ -138,32 +151,29 @@ def drag_end(event):
 # finally make the widgets a drag source
 
 
-def test_Selected():
-    selectedFile = listbox.curselection()
-    if selectedFile:
-        filename = listbox.get(ANCHOR)
-        if filename.endswith('.xdf'):
-                streams = pyxdf.load_xdf(filename)
-                #show_data(streams)
-                loadedXDF = True
-                print(loadedXDF)
 
 def show_data(data):
     for stream in data:
         y = stream['time_series']
+        text.insert(END,y)
 
-        if isinstance(y, list):
+        #y = stream['time_series']
+
+        #if isinstance(y, list):
             # list of strings, draw one vertical line for each marker
-            for timestamp, marker in zip(stream['time_stamps'], y):
-                plt.axvline(x=timestamp)
-                print(f'Marker "{marker[0]}" @ {timestamp:.2f}s')
-        elif isinstance(y, np.ndarray):
+            #for timestamp, marker in zip(stream['time_stamps'], y):
+                #plt.axvline(x=timestamp)
+                #print(f'Marker "{marker[0]}" @ {timestamp:.2f}s')
+        #elif isinstance(y, np.ndarray):
             # numeric data, draw as lines
-            plt.plot(stream['time_stamps'], y)
-        else:
-            raise RuntimeError('Unknown stream format')
+            #plt.plot(stream['time_stamps'], y)
+        #else:
+            #raise RuntimeError('Unknown stream format')
 
-    plt.show()
+    #plt.show()
+
+
+
 listbox.dnd_bind('<<DragInitCmd>>', drag_init_listbox)
 listbox.dnd_bind('<<DragEndCmd>>', drag_end)
 # skip the useless drag_end() binding for the text widget
@@ -171,9 +181,11 @@ listbox.dnd_bind('<<DragEndCmd>>', drag_end)
 root.update_idletasks()
 root.deiconify()
 while True:
-    if loadedXDF:
-        print("updated")
+    selectedFile = listbox.curselection()
+    if selectedFile:
+        buttonbox.grid()
     else:
-        test_Selected()
+        buttonbox.grid_remove()
+
     root.update_idletasks()
     root.update()
