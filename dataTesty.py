@@ -21,7 +21,7 @@ def SearchStream (name):
             print(stream['info']['name'][0])
             if stream['info']['name'][0] == 'Plux':
                 print("There is a plux stream")
-
+                numOfChannels =stream['info']['channel_count'][0]
                 y = stream['time_series']
                 timeStamps = stream['time_stamps']
                 yline = column(y, 0)
@@ -58,7 +58,7 @@ df_merge = pd.merge(pluxpd,eegpd,on='Timestamp',how='outer')
 
 
 figure, axes = plt.subplots(3, 4, sharex=True, figsize=(25,12))
-figure.suptitle('Geeksforgeeks - 3 x 4 axes with no data')
+figure.suptitle('Biosignals')
 
 
 
