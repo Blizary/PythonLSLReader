@@ -27,6 +27,7 @@ def SearchStream (name):
                 timeStamps = stream['time_stamps']
                 newpd = pd.DataFrame([timeStamps], index=['Timestamp']).T
                 for channel in range(numOfChannels):
+                    #newpd['Type'] = "plux"+str(channel)
                     yline = column(y, channel)
                     newpd["plux"+str(channel)] = yline
 
@@ -61,25 +62,22 @@ df_merge = pd.merge(pluxpd,eegpd,on='Timestamp',how='outer')
 df = pd.DataFrame(data = np.random.randint(low=0,high=2,size=(10,5)),
                   columns=['Mon','Tues','Weds','Thurs','Fri'])
 
-figure, axes = plt.subplots(3, 5, sharex=True, figsize=(25,12))
-figure.suptitle('Biosignals')
+#figure, axes = plt.subplots(3, 4, sharex=True, figsize=(25,12))
+#figure.suptitle('Biosignals')
 
-sns.lineplot('Timestamp', 'value', hue='variable',data=pd.melt(df_merge, 'Timestamp'),ax= axes[0,0])
-sns.lineplot('Timestamp', 'value', hue='variable',data=pd.melt(pluxpd, 'Timestamp'),ax= axes[0,1])
+#sns.lineplot('Timestamp', 'value', hue='variable',data=pd.melt(df_merge, 'Timestamp'),ax= axes[0,0])
+#sns.lineplot('Timestamp', 'value', hue='variable',data=pd.melt(pluxpd, 'Timestamp'),ax= axes[0,1])
+#sns.lineplot(ax=axes[0,2], data = pluxpd, x= 'Timestamp', y ='plux0')
+#sns.lineplot(ax=axes[0,3], data = pluxpd, x= 'Timestamp', y ='plux1')
+#sns.lineplot(ax=axes[1,0], data = pluxpd, x= 'Timestamp', y ='plux2')
 
-sns.lineplot(ax=axes[0,2], data = pluxpd, x= 'Timestamp', y ='plux0')
-sns.lineplot(ax=axes[0,3], data = pluxpd, x= 'Timestamp', y ='plux1')
-sns.lineplot(ax=axes[1,0], data = pluxpd, x= 'Timestamp', y ='plux2')
-if 'plux3' in df_merge:
-    sns.lineplot(ax=axes[0,4], data=pluxpd, x='Timestamp', y='plux3')
-
-sns.lineplot('Timestamp', 'value', hue='variable',data=pd.melt(eegpd, 'Timestamp'),ax= axes[2,3])
-sns.lineplot(ax=axes[1,1], data = df_merge, x= 'Timestamp', y ='AF3')
-sns.lineplot(ax=axes[1,2], data = df_merge, x= 'Timestamp', y ='AF4')
-sns.lineplot(ax=axes[1,3], data = df_merge, x= 'Timestamp', y ='Fp1')
-sns.lineplot(ax=axes[2,0], data = df_merge, x= 'Timestamp', y ='Fp2')
-sns.lineplot(ax=axes[2,1], data = df_merge, x= 'Timestamp', y ='AF7')
-sns.lineplot(ax=axes[2,2], data = df_merge, x= 'Timestamp', y ='AF8')
+#sns.lineplot('Timestamp', 'value', hue='variable',data=pd.melt(eegpd, 'Timestamp'),ax= axes[2,3])
+#sns.lineplot(ax=axes[1,1], data = df_merge, x= 'Timestamp', y ='AF3')
+#sns.lineplot(ax=axes[1,2], data = df_merge, x= 'Timestamp', y ='AF4')
+#sns.lineplot(ax=axes[1,3], data = df_merge, x= 'Timestamp', y ='Fp1')
+#sns.lineplot(ax=axes[2,0], data = df_merge, x= 'Timestamp', y ='Fp2')
+#sns.lineplot(ax=axes[2,1], data = df_merge, x= 'Timestamp', y ='AF7')
+#sns.lineplot(ax=axes[2,2], data = df_merge, x= 'Timestamp', y ='AF8')
 
 #df2 = df_merge.melt(id_vars=['Timestamp'],value_vars=[])
 #g = sns.FacetGrid(data=df2,col='variable',col_wrap=4)
