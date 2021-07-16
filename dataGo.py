@@ -8,28 +8,37 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 import pandas as pd
+import math
 
-data, header = pyxdf.load_xdf('Plux3.xdf')
+
+data, header = pyxdf.load_xdf('ClosedEyes.xdf')
+availableSignals = ['Plux - PZT', 'Plux - EDA', 'Plux - TMP', 'Plux - EMG', 'Plux - ECG',
+                    'Plux - EEG','Plux - ACC','EEG']
+
+alldataAvailabe = pd.DataFrame()
+pluxdp = pd.DataFrame()
+viveEEGpd = pd.DataFrame()
+numOfCombineGraphs = 3
+
 
 def column(matrix, i):
     return [row[i] for row in matrix]
 
 def SearchStream (name):
 
-    if name == 'Plux':
+    newpd = pd.DataFrame()
+    if name == 'Plux - PZT' or name =='Plux - EDA' or name == 'Plux - TMP' or name == 'Plux - EMG' or name == 'Plux - ECG' or name == 'Plux - EEG' or name == 'Plux - ACC':
         for stream in data:
-            print(stream['info']['name'][0])
-            if stream['info']['name'][0] == 'Plux':
-                print("There is a plux stream")
+            if stream['info']['name'][0] == name:
+                print("There is a " + name + " stream")
                 numOfChannels =int(stream['info']['channel_count'][0])
                 print (numOfChannels)
                 y = stream['time_series']
                 timeStamps = stream['time_stamps']
                 newpd = pd.DataFrame([timeStamps], index=['Timestamp']).T
                 for channel in range(numOfChannels):
-                    #newpd['Type'] = "plux"+str(channel)
                     yline = column(y, channel)
-                    newpd["plux"+str(channel)] = yline
+                    newpd[""+name+""] = yline
 
 
 
@@ -49,27 +58,66 @@ def SearchStream (name):
                 newpd = pd.DataFrame([timeStamps, eegy1, eegy2, eegy3, eegy4, eegy5, eegy6],
                                      index=['Timestamp', 'AF3', 'AF4', 'Fp1', 'Fp2', 'AF7', 'AF8']).T
 
-    return newpd
+    if not newpd.empty:
+        return newpd
+    else:
+        print("There wasnt a "+ name + " stream")
+
+
+for names in availableSignals:
+    print("is there a " + names + "?")
+    addpd = SearchStream(names)
+    if addpd is not None:
+        alldataAvailabe= alldataAvailabe.append(addpd)
+    if "Plux" in names:
+        pluxdp =pluxdp.append(addpd)
+    elif names == "EEG":
+        viveEEGpd = viveEEGpd.append(addpd)
+
+
+
+#get names of collums
+dataNames = alldataAvailabe.columns.values
+channelQuant = dataNames.size-1
+
+if channelQuant % numOfCombineGraphs == 0:
+    numofLines = math.floor(channelQuant / numOfCombineGraphs)
+else:
+    numofLines = math.floor(channelQuant / numOfCombineGraphs)+1
+
+
+
+## PLOTS
+figure, axes = plt.subplots(numofLines,numOfCombineGraphs, sharex=True, figsize=(25,12))
+figure.suptitle('Biosignals')
+
+sns.lineplot('Timestamp', 'value', hue='variable',data=pd.melt(alldataAvailabe, 'Timestamp'),ax= axes[0,0])
+sns.lineplot('Timestamp', 'value', hue='variable',data=pd.melt(pluxdp, 'Timestamp'),ax= axes[0,1])
+sns.lineplot('Timestamp', 'value', hue='variable',data=pd.melt(viveEEGpd, 'Timestamp'),ax= axes[0,2])
+
+
+rowCount = 1
+lineCount = 0
+for channel in range(dataNames.size):
+    if dataNames[channel] != 'Timestamp':
+        if rowCount<numofLines:
+            if lineCount<numOfCombineGraphs:
+                sns.lineplot(ax=axes[rowCount, lineCount], data=alldataAvailabe, x='Timestamp', y=dataNames[channel])
+                print ("["+str(rowCount)+"],["+str(lineCount)+"] - "+dataNames[channel])
+                lineCount += 1
+            else:
+                lineCount = 0
+                rowCount += 1
 
 
 
 
-pluxpd = SearchStream('Plux')
-eegpd = SearchStream('EEG')
 
-df_merge = pd.merge(pluxpd,eegpd,on='Timestamp',how='outer')
-
-df = pd.DataFrame(data = np.random.randint(low=0,high=2,size=(10,5)),
-                  columns=['Mon','Tues','Weds','Thurs','Fri'])
-
-#figure, axes = plt.subplots(3, 4, sharex=True, figsize=(25,12))
-#figure.suptitle('Biosignals')
-
-#sns.lineplot('Timestamp', 'value', hue='variable',data=pd.melt(df_merge, 'Timestamp'),ax= axes[0,0])
-#sns.lineplot('Timestamp', 'value', hue='variable',data=pd.melt(pluxpd, 'Timestamp'),ax= axes[0,1])
-#sns.lineplot(ax=axes[0,2], data = pluxpd, x= 'Timestamp', y ='plux0')
+#sns.lineplot(ax=axes[1,0], data = alldataAvailabe, x= 'Timestamp', y ='Plux - PZT')
 #sns.lineplot(ax=axes[0,3], data = pluxpd, x= 'Timestamp', y ='plux1')
 #sns.lineplot(ax=axes[1,0], data = pluxpd, x= 'Timestamp', y ='plux2')
+#if 'plux3' in df_merge:
+    #sns.lineplot(ax=axes[0,4], data=pluxpd, x='Timestamp', y='plux3')
 
 #sns.lineplot('Timestamp', 'value', hue='variable',data=pd.melt(eegpd, 'Timestamp'),ax= axes[2,3])
 #sns.lineplot(ax=axes[1,1], data = df_merge, x= 'Timestamp', y ='AF3')
@@ -78,12 +126,6 @@ df = pd.DataFrame(data = np.random.randint(low=0,high=2,size=(10,5)),
 #sns.lineplot(ax=axes[2,0], data = df_merge, x= 'Timestamp', y ='Fp2')
 #sns.lineplot(ax=axes[2,1], data = df_merge, x= 'Timestamp', y ='AF7')
 #sns.lineplot(ax=axes[2,2], data = df_merge, x= 'Timestamp', y ='AF8')
-
-#df2 = df_merge.melt(id_vars=['Timestamp'],value_vars=[])
-#g = sns.FacetGrid(data=df2,col='variable',col_wrap=4)
-#g.map(sns.lineplot,'Timestamp','Value')
-
-
 
 
 
