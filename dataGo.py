@@ -11,13 +11,14 @@ import pandas as pd
 import math
 
 
-data, header = pyxdf.load_xdf('ClosedEyes.xdf')
+data, header = pyxdf.load_xdf('Markers.xdf')
 availableSignals = ['Plux - PZT', 'Plux - EDA', 'Plux - TMP', 'Plux - EMG', 'Plux - ECG',
-                    'Plux - EEG','Plux - ACC','EEG']
+                    'Plux - EEG','Plux - ACC','EEG','MarkerStream']
 
 alldataAvailabe = pd.DataFrame()
 pluxdp = pd.DataFrame()
 viveEEGpd = pd.DataFrame()
+markerspd = pd.DataFrame()
 numOfCombineGraphs = 3
 
 
@@ -58,6 +59,19 @@ def SearchStream (name):
                 newpd = pd.DataFrame([timeStamps, eegy1, eegy2, eegy3, eegy4, eegy5, eegy6],
                                      index=['Timestamp', 'AF3', 'AF4', 'Fp1', 'Fp2', 'AF7', 'AF8']).T
 
+    elif name == 'MarkerStream':
+        for stream in data:
+            if stream['info']['name'][0] == name:
+                print("There is a " + name + " stream")
+                eventnames = stream['time_series']
+                timeStamps = stream['time_stamps']
+                yline = column(eventnames, 0)
+
+                midpd = pd.DataFrame([timeStamps],
+                                     index=['Timestamp']).T
+                newstringpd = pd.Series([yline],name="Events").T
+                newpd = pd.concat([midpd,newstringpd],axis = 1)
+
     if not newpd.empty:
         return newpd
     else:
@@ -73,19 +87,21 @@ for names in availableSignals:
         pluxdp =pluxdp.append(addpd)
     elif names == "EEG":
         viveEEGpd = viveEEGpd.append(addpd)
-
+    elif names == "MarkerStream":
+        markerspd = markerspd.append(addpd)
 
 
 #get names of collums
 dataNames = alldataAvailabe.columns.values
 channelQuant = dataNames.size-1
 
+print(channelQuant)
 if channelQuant % numOfCombineGraphs == 0:
     numofLines = math.floor(channelQuant / numOfCombineGraphs)
 else:
-    numofLines = math.floor(channelQuant / numOfCombineGraphs)+1
+    numofLines = math.floor(channelQuant / numOfCombineGraphs)+2
 
-
+print(numofLines)
 
 ## PLOTS
 figure, axes = plt.subplots(numofLines,numOfCombineGraphs, sharex=True, figsize=(25,12))
@@ -99,33 +115,19 @@ sns.lineplot('Timestamp', 'value', hue='variable',data=pd.melt(viveEEGpd, 'Times
 rowCount = 1
 lineCount = 0
 for channel in range(dataNames.size):
-    if dataNames[channel] != 'Timestamp':
+    if dataNames[channel] != 'Timestamp' :
+        print("graph for "+dataNames[channel])
         if rowCount<numofLines:
             if lineCount<numOfCombineGraphs:
                 sns.lineplot(ax=axes[rowCount, lineCount], data=alldataAvailabe, x='Timestamp', y=dataNames[channel])
                 print ("["+str(rowCount)+"],["+str(lineCount)+"] - "+dataNames[channel])
                 lineCount += 1
             else:
-                lineCount = 0
                 rowCount += 1
-
-
-
-
-
-#sns.lineplot(ax=axes[1,0], data = alldataAvailabe, x= 'Timestamp', y ='Plux - PZT')
-#sns.lineplot(ax=axes[0,3], data = pluxpd, x= 'Timestamp', y ='plux1')
-#sns.lineplot(ax=axes[1,0], data = pluxpd, x= 'Timestamp', y ='plux2')
-#if 'plux3' in df_merge:
-    #sns.lineplot(ax=axes[0,4], data=pluxpd, x='Timestamp', y='plux3')
-
-#sns.lineplot('Timestamp', 'value', hue='variable',data=pd.melt(eegpd, 'Timestamp'),ax= axes[2,3])
-#sns.lineplot(ax=axes[1,1], data = df_merge, x= 'Timestamp', y ='AF3')
-#sns.lineplot(ax=axes[1,2], data = df_merge, x= 'Timestamp', y ='AF4')
-#sns.lineplot(ax=axes[1,3], data = df_merge, x= 'Timestamp', y ='Fp1')
-#sns.lineplot(ax=axes[2,0], data = df_merge, x= 'Timestamp', y ='Fp2')
-#sns.lineplot(ax=axes[2,1], data = df_merge, x= 'Timestamp', y ='AF7')
-#sns.lineplot(ax=axes[2,2], data = df_merge, x= 'Timestamp', y ='AF8')
+                lineCount = 0
+                sns.lineplot(ax=axes[rowCount, lineCount], data=alldataAvailabe, x='Timestamp', y=dataNames[channel])
+                print("[" + str(rowCount) + "],[" + str(lineCount) + "] - " + dataNames[channel])
+                lineCount += 1
 
 
 
