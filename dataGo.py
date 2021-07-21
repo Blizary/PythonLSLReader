@@ -25,6 +25,7 @@ numOfCombineGraphs = 3
 def column(matrix, i):
     return [row[i] for row in matrix]
 
+
 def SearchStream (name):
 
     newpd = pd.DataFrame()
@@ -64,14 +65,13 @@ def SearchStream (name):
             if stream['info']['name'][0] == name:
                 print("There is a " + name + " stream")
                 eventnames = stream['time_series']
-                timeStamps = stream['time_stamps']
-                yline = column(eventnames, 0)
-                newpd = pd.DataFrame(data={'Timestamp': np.array(timeStamps, dtype=float),
-                        'Event': np.array(yline, dtype=object)
-                       }
-                 )
-                print (newpd)
-
+                if len(eventnames)>=2:
+                    timeStamps = stream['time_stamps']
+                    yline = column(eventnames, 0)
+                    newpd = pd.DataFrame(data={'Timestamp': np.array(timeStamps, dtype=float),
+                            'Event': np.array(yline, dtype=object)
+                        }
+                    )
 
     if not newpd.empty:
         return newpd
@@ -85,19 +85,20 @@ for names in availableSignals:
     if addpd is not None:
         if names!="MarkerStream":
             alldataAvailabe= alldataAvailabe.append(addpd)
-    if "Plux" in names:
-        pluxdp =pluxdp.append(addpd)
-    elif names == "EEG":
-        viveEEGpd = viveEEGpd.append(addpd)
-    elif names == "MarkerStream":
-        markerspd = markerspd.append(addpd)
+        if "Plux" in names:
+            pluxdp =pluxdp.append(addpd)
+        elif names == "EEG":
+            viveEEGpd = viveEEGpd.append(addpd)
+        elif names == "MarkerStream":
+            markerspd = markerspd.append(addpd)
 
 #find max value for markers
-temppd = alldataAvailabe
-temppd = temppd.drop(columns=['Timestamp'])
-maxpd = temppd.max()
-maxIndex = maxpd.max()
-markerspd.loc[:,'Value'] = maxIndex
+if not markerspd.empty:
+    temppd = alldataAvailabe
+    temppd = temppd.drop(columns=['Timestamp'])
+    maxpd = temppd.max()
+    maxIndex = maxpd.max()
+    markerspd.loc[:,'Value'] = maxIndex
 
 
 #get names of collums
@@ -142,9 +143,9 @@ for channel in range(dataNames.size):
                 print("[" + str(rowCount) + "],[" + str(lineCount) + "] - " + dataNames[channel])
                 lineCount += 1
 
-
-for ax in figure.axes:
-    for pos in markerspd['Timestamp'].tolist():
-        ax.axvline(x=pos, color='r', linestyle=':')
+if not markerspd.empty:
+    for ax in figure.axes:
+        for pos in markerspd['Timestamp'].tolist():
+            ax.axvline(x=pos, color='r', linestyle=':')
 
 plt.show()
