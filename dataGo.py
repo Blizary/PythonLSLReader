@@ -66,11 +66,12 @@ def SearchStream (name):
                 eventnames = stream['time_series']
                 timeStamps = stream['time_stamps']
                 yline = column(eventnames, 0)
+                newpd = pd.DataFrame(data={'Timestamp': np.array(timeStamps, dtype=float),
+                        'Event': np.array(yline, dtype=object)
+                       }
+                 )
+                print (newpd)
 
-                midpd = pd.DataFrame([timeStamps],
-                                     index=['Timestamp']).T
-                newstringpd = pd.Series([yline],name="Events").T
-                newpd = pd.concat([midpd,newstringpd],axis = 1)
 
     if not newpd.empty:
         return newpd
@@ -82,13 +83,21 @@ for names in availableSignals:
     print("is there a " + names + "?")
     addpd = SearchStream(names)
     if addpd is not None:
-        alldataAvailabe= alldataAvailabe.append(addpd)
+        if names!="MarkerStream":
+            alldataAvailabe= alldataAvailabe.append(addpd)
     if "Plux" in names:
         pluxdp =pluxdp.append(addpd)
     elif names == "EEG":
         viveEEGpd = viveEEGpd.append(addpd)
     elif names == "MarkerStream":
         markerspd = markerspd.append(addpd)
+
+#find max value for markers
+temppd = alldataAvailabe
+temppd = temppd.drop(columns=['Timestamp'])
+maxpd = temppd.max()
+maxIndex = maxpd.max()
+markerspd.loc[:,'Value'] = maxIndex
 
 
 #get names of collums
@@ -108,6 +117,10 @@ figure, axes = plt.subplots(numofLines,numOfCombineGraphs, sharex=True, figsize=
 figure.suptitle('Biosignals')
 
 sns.lineplot('Timestamp', 'value', hue='variable',data=pd.melt(alldataAvailabe, 'Timestamp'),ax= axes[0,0])
+#for pos in markerspd['Timestamp'].tolist():
+    #mainplot.axvline(x=pos, color='r', linestyle=':')
+
+
 sns.lineplot('Timestamp', 'value', hue='variable',data=pd.melt(pluxdp, 'Timestamp'),ax= axes[0,1])
 sns.lineplot('Timestamp', 'value', hue='variable',data=pd.melt(viveEEGpd, 'Timestamp'),ax= axes[0,2])
 
@@ -115,7 +128,7 @@ sns.lineplot('Timestamp', 'value', hue='variable',data=pd.melt(viveEEGpd, 'Times
 rowCount = 1
 lineCount = 0
 for channel in range(dataNames.size):
-    if dataNames[channel] != 'Timestamp' :
+    if dataNames[channel] != 'Timestamp':
         print("graph for "+dataNames[channel])
         if rowCount<numofLines:
             if lineCount<numOfCombineGraphs:
@@ -130,5 +143,8 @@ for channel in range(dataNames.size):
                 lineCount += 1
 
 
+for ax in figure.axes:
+    for pos in markerspd['Timestamp'].tolist():
+        ax.axvline(x=pos, color='r', linestyle=':')
 
 plt.show()
