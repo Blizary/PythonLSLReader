@@ -21,6 +21,7 @@ viveEEGpd = pd.DataFrame()
 markerspd = pd.DataFrame()
 numOfCombineGraphs = 3
 
+print("bananaas")
 
 def column(matrix, i):
     return [row[i] for row in matrix]
