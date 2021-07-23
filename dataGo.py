@@ -11,14 +11,15 @@ import pandas as pd
 import math
 
 
-data, header = pyxdf.load_xdf('Markers.xdf')
+data, header = pyxdf.load_xdf('EyeTrack.xdf')
 availableSignals = ['Plux - PZT', 'Plux - EDA', 'Plux - TMP', 'Plux - EMG', 'Plux - ECG',
-                    'Plux - EEG','Plux - ACC','EEG','MarkerStream']
+                    'Plux - EEG','Plux - ACC','EEG','MarkerStream','Eye Tracking']
 
 alldataAvailabe = pd.DataFrame()
 pluxdp = pd.DataFrame()
 viveEEGpd = pd.DataFrame()
 markerspd = pd.DataFrame()
+eyetrackingpd = pd.DataFrame()
 numOfCombineGraphs = 3
 
 print("bananaas")
@@ -74,6 +75,19 @@ def SearchStream (name):
                         }
                     )
 
+    elif name == 'Eye Tracking':
+        for stream in data:
+            if stream['info']['name'][0] == name:
+                print("There is a " + name + " stream")
+                eventnames = stream['time_series']
+                if len(eventnames)>=2:
+                    timeStamps = stream['time_stamps']
+                    yline = column(eventnames, 0)
+                    newpd = pd.DataFrame(data={'Timestamp': np.array(timeStamps, dtype=float),
+                            'Event': np.array(yline, dtype=object)
+                        }
+                    )
+
     if not newpd.empty:
         return newpd
     else:
@@ -84,14 +98,17 @@ for names in availableSignals:
     print("is there a " + names + "?")
     addpd = SearchStream(names)
     if addpd is not None:
-        if names!="MarkerStream":
+        if names!="MarkerStream" and names!="Eye Tracking" :
             alldataAvailabe= alldataAvailabe.append(addpd)
+
         if "Plux" in names:
             pluxdp =pluxdp.append(addpd)
         elif names == "EEG":
             viveEEGpd = viveEEGpd.append(addpd)
         elif names == "MarkerStream":
             markerspd = markerspd.append(addpd)
+        elif names == "Eye Tracking":
+            eyetrackingpd = eyetrackingpd.append(addpd)
 
 #find max value for markers
 if not markerspd.empty:
@@ -108,7 +125,7 @@ channelQuant = dataNames.size-1
 
 print(channelQuant)
 if channelQuant % numOfCombineGraphs == 0:
-    numofLines = math.floor(channelQuant / numOfCombineGraphs)
+    numofLines = math.floor(channelQuant / numOfCombineGraphs)+1
 else:
     numofLines = math.floor(channelQuant / numOfCombineGraphs)+2
 
