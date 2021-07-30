@@ -11,7 +11,7 @@ import pandas as pd
 import math
 
 
-data, header = pyxdf.load_xdf('EyeTrack.xdf')
+data, header = pyxdf.load_xdf('samplefile.xdf')
 availableSignals = ['Plux - PZT', 'Plux - EDA', 'Plux - TMP', 'Plux - EMG', 'Plux - ECG',
                     'Plux - EEG','Plux - ACC','EEG','MarkerStream','Eye Tracking']
 
